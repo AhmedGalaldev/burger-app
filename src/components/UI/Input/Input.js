@@ -2,12 +2,15 @@ import React from "react";
 import styles from "./Input.module.css";
 
 const input = (props) => {
-  let inputElement = null;
+  let inputElement = [styles.InputElement];
+  if(props.invalid && props.shouldValid){
+    inputElement.push(styles.Invalid)
+  }
   switch (props.elementType) {
     case "input":
       inputElement = (
         <input
-          className={styles.InputElement}
+          className={inputElement.join(" ")}
           {...props.elementConfig}
           value={props.value}
           onChange={props.changed}
@@ -17,7 +20,7 @@ const input = (props) => {
     case "teaxtarea":
       inputElement = (
         <textarea
-          className={styles.InputElement}
+          className={inputElement.join(" ")}
           {...props.elementConfig}
           value={props.value}
           onChange={props.changed}
@@ -27,7 +30,7 @@ const input = (props) => {
     case "select":
       inputElement = (
         <select
-          className={styles.InputElement}
+          className={inputElement.join(" ")}
           value={props.value}
           onChange={props.changed}
         >
@@ -42,7 +45,7 @@ const input = (props) => {
     default:
       inputElement = (
         <input
-          className={styles.InputElement}
+          className={inputElement.join(" ")}
           {...props.elementConfig}
           value={props.value}
           onChange={props.changed}

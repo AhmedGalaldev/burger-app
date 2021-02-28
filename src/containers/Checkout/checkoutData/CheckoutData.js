@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import styles from "./CheckoutData.module.css";
 import Button from "../../../components/UI/Button/Button";
 import axios from "../../../axios-order";
@@ -15,6 +16,10 @@ class CheckoutData extends Component {
           placeholder: "Your Name",
         },
         value: "",
+        validation: {
+          required: true,
+        },
+        valid: false,
       },
       street: {
         elementType: "input",
@@ -23,6 +28,10 @@ class CheckoutData extends Component {
           placeholder: "Street",
         },
         value: "",
+        validation: {
+          required: true,
+        },
+        valid: false,
       },
       zipCode: {
         elementType: "input",
@@ -31,6 +40,12 @@ class CheckoutData extends Component {
           placeholder: "ZIP Code",
         },
         value: "",
+        validation: {
+          required: true,
+          minLength: 5,
+          maxLength: 5,
+        },
+        valid: false,
       },
       country: {
         elementType: "input",
@@ -39,6 +54,10 @@ class CheckoutData extends Component {
           placeholder: "Country",
         },
         value: "",
+        validation: {
+          required: true,
+        },
+        valid: false,
       },
       email: {
         elementType: "input",
@@ -47,6 +66,10 @@ class CheckoutData extends Component {
           placeholder: "Your E-Mail",
         },
         value: "",
+        validation: {
+          required: true,
+        },
+        valid: false,
       },
       deliveryMethod: {
         elementType: "select",
@@ -64,12 +87,19 @@ class CheckoutData extends Component {
 
   handleOrder = (event) => {
     event.preventDefault();
-    console.log(this.props.ingredients);
+    console.log(this.props.ings);
 
     this.setState({ loading: true });
+    const formData = {};
+    for (let formDataIdentifier in this.state.orderForm) {
+      formData[formDataIdentifier] = this.state.orderForm[
+        formDataIdentifier
+      ].value;
+    }
     const order = {
-      ingredients: this.props.ingredients,
+      ingredients: this.props.ings,
       price: this.props.price,
+      orderData: formData,
     };
 
     axios
@@ -83,12 +113,33 @@ class CheckoutData extends Component {
       });
   };
 
+  checkValidation = (value, rules) => {
+    let isValid = true;
+    if (rules.required) {
+      isValid = value.trim() !== "" && isValid;
+    }
+
+    if (rules.minLength) {
+      isValid = value.length >= rules.minLength && isValid;
+    }
+
+    if (rules.maxLength) {
+      isValid = value.length <= rules.maxLength && isValid;
+    }
+
+    return isValid;
+  };
   inputChangeHandler = (event, inputIdentifier) => {
     const updatedOrderForm = { ...this.state.orderForm };
     const updatedFormElement = { ...updatedOrderForm[inputIdentifier] };
     updatedFormElement.value = event.target.value;
     updatedOrderForm[inputIdentifier] = updatedFormElement;
+    updatedFormElement.valid = this.checkValidation(
+      updatedFormElement.value,
+      updatedFormElement.validation
+    );
 
+    console.log(updatedFormElement);
     this.setState({ orderForm: updatedOrderForm });
   };
 
@@ -101,7 +152,7 @@ class CheckoutData extends Component {
       });
     }
     let form = (
-      <form>
+      <form onSubmit={this.handleOrder}>
         {formElemntsArray.map((formElement) => (
           <Input
             key={formElement.id}
@@ -109,12 +160,12 @@ class CheckoutData extends Component {
             elementConfig={formElement.config.elementConfig}
             value={formElement.config.value}
             changed={(event) => this.inputChangeHandler(event, formElement.id)}
+            invalid={!formElement.config.valid}
+            shouldValid={formElement.config.validation}
           />
         ))}
 
-        <Button btnType="Success" clicked={this.handleOrder}>
-          Submit
-        </Button>
+        <Button btnType="Success">Submit</Button>
       </form>
     );
     if (this.state.loading) {
@@ -129,4 +180,10 @@ class CheckoutData extends Component {
   }
 }
 
-export default CheckoutData;
+const mapStateToProps = (state) => {
+  return {
+    ings: state.ingredients,
+    price: state.totalePrice,
+  };
+};
+export default connect(mapStateToProps)(CheckoutData);
